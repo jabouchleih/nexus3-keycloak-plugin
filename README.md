@@ -17,6 +17,29 @@ the token surrounded by curly brackets (`{123456}`) to the password.
 | Token        | `112341`                     |  
 | Resulting password | `1mysecretpw2{112341}` | 
  
+ 
+## Docker steps (no persistence)
+The steps used to implement this plugin with the default Docker image are (container name: nexus_app_1):
+
+ 1. Copying the plugin into the container: <br/>
+   `docker cp /path/of/local/file/nexus3-keycloak-plugin-0.3.2-SNAPSHOT.jar nexus_app_1:/opt/sonatype/nexus/system/`
+ 2. Opening a root shell inside the container:
+    `docker exec -u 0 -it nexus_app_1 /bin/bash`
+ 3. Navigate to the system directory:
+    `cd /opt/sonatype/nexus/system/`
+ 4. Creating a folder inside the installation directory (/opt/sonatype/nexus/system/):
+    `mkdir -p org/github/flytreeleft/nexus3-keycloak-plugin/0.3.2-SNAPSHOT`
+ 5. Copying the file added in step 1 to the newly created folder: 
+    `mv nexus3-keycloak-plugin-0.3.2-SNAPSHOT.jar org/github/flytreeleft/nexus3-keycloak-plugin/0.3.2-SNAPSHOT/`
+ 6. Adding the plugin to the startup properties of Nexus 3: 
+    `echo "mvn\\:org.github.flytreeleft/nexus3-keycloak-plugin/0.3.2-SNAPSHOT = 200" >> /opt/sonatype/nexus/etc/karaf/startup.properties`   
+ 7. Reboot your container:
+    `docker-compose restart / docker restart nexus_app_1`
+    
+**ATTENTION**: This way, the changes are lost after the container is rebuilt. So there's no persistence.
+Use a separate Dockerfile to create your own image with the necessary changes.
+
+See below for more information.
 
 ## Warning
 

@@ -7,6 +7,7 @@ import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.github.flytreeleft.nexus3.keycloak.plugin.internal.NexusKeycloakClient;
+import org.github.flytreeleft.nexus3.keycloak.plugin.internal.token.UsernamePasswordOnetimePasswordToken;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -57,7 +58,8 @@ public class KeycloakAuthenticatingRealmTest {
     @Test
     public void testDoGetAuthenticationInfoWithKeycloakOK() {
         UsernamePasswordToken token = new UsernamePasswordToken("u1", new char[] { 'p', '1' });
-        Mockito.when(this.mockedClient.authenticate(token)).thenReturn(true);
+        Mockito.when(this.mockedClient.authenticate(new UsernamePasswordOnetimePasswordToken(token))).thenReturn(true);
+        Mockito.when(this.mockedClient.authenticate(Mockito.any())).thenReturn(true);
         AuthenticationInfo info = this.r.doGetAuthenticationInfo(token);
         Assert.assertNotNull(info);
     }

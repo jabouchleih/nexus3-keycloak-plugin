@@ -16,8 +16,49 @@ the token surrounded by curly brackets (`{123456}`) to the password.
 | Password     | `1mysecretpw2`               | 
 | Token        | `112341`                     |  
 | Resulting password | `1mysecretpw2{112341}` | 
+
+If no curly brackets with 6 digits are provided, no TOTP form parameter is send (default non-2FA behavior).
  
+## Docker steps (with persistence)
+Create a docker image that contains three additional volumes which mount the following files inside the container:
+ - `/opt/sonatype/nexus/system/org/github/`
+ - `/opt/sonatype/nexus/etc/keycloak.json`
+ - `/opt/sonatype/nexus/etc/karaf/startup.properties`
  
+For example in a `docker-compose.yml`:
+```
+version: '2'
+
+services:
+  app:
+    image: sonatype/nexus3:latest
+    ports:
+      - 127.0.0.1:11801:8081
+    volumes:
+      - /var/docker/volumes/nexus/app/work:/sonatype-work
+      - /var/docker/volumes/nexus/app/data:/nexus-data
+      - /var/docker/volumes/nexus/app/plugins/org/github/:/opt/sonatype/nexus/system/org/github/
+      - /var/docker/volumes/nexus/app/conf/keycloak.json:/opt/sonatype/nexus/etc/keycloak.json
+      - /var/docker/volumes/nexus/app/conf/startup.properties:/opt/sonatype/nexus/etc/karaf/startup.properties
+    restart: always
+```
+
+or via the CLI itself:
+```
+docker run -d \
+    --name=nexus_app_1 \
+    -v /var/docker/volumes/nexus/app/work:/sonatype-work \
+    -v /var/docker/volumes/nexus/app/data:/nexus-data \
+    -v /var/docker/volumes/nexus/app/plugins/org/github/:/opt/sonatype/nexus/system/org/github/ \
+    -v /var/docker/volumes/nexus/app/conf/keycloak.json:/opt/sonatype/nexus/etc/keycloak.json \
+    -v /var/docker/volumes/nexus/app/conf/startup.properties:/opt/sonatype/nexus/etc/karaf/startup.properties \
+  sonatype/nexus3:latest
+```
+###### ATTENTION
+Before starting the service, make sure that the referenced files are already existent otherwise docker will assume that the target files are folders.
+
+For a working example, refer to the `docker/docker-compose` directory of this project.
+
 ## Docker steps (no persistence)
 The steps used to implement this plugin with the default Docker image are (container name: nexus_app_1):
 

@@ -1,0 +1,14 @@
+version: '2'
+
+services:
+  app:
+    image: sonatype/nexus3
+    ports:
+      - 127.0.0.1:11801:8081
+    volumes:
+      - /var/docker/volumes/nexus/app/work:/sonatype-work
+      - /var/docker/volumes/nexus/app/data:/nexus-data
+      - /var/docker/volumes/nexus/app/plugins/org/github/:/opt/sonatype/nexus/system/org/github/
+      - /var/docker/volumes/nexus/app/conf/keycloak.json:/opt/sonatype/nexus/etc/keycloak.json
+      - /var/docker/volumes/nexus/app/conf/startup.properties:/opt/sonatype/nexus/etc/karaf/startup.properties
+    restart: always

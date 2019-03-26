@@ -1,0 +1,13 @@
+{
+  "realm": "my-realm",
+  "auth-server-url": "https://keycloak.domain:8081/auth",
+  "ssl-required": "external",
+  "resource": "resource-id",
+  "verify-token-audience": true,
+  "credentials": {
+    "secret": "mysupersecret-guid"
+  },
+  "use-resource-role-mappings": true,
+  "confidential-port": 0,
+  "policy-enforcer": {}
+}

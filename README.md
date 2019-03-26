@@ -17,7 +17,7 @@ the token surrounded by curly brackets (`{123456}`) to the password.
 | Token        | `112341`                     |  
 | Resulting password | `1mysecretpw2{112341}` | 
 
-If no curly brackets with 6 digits are provided, no TOTP form parameter is send (default non-2FA behavior).
+If no curly brackets with 6 digits are provided, no TOTP form parameter is sent (default non-2FA behavior).
  
 ## Docker steps (with persistence)
 Create a docker image that contains three additional volumes which mount the following files inside the container:

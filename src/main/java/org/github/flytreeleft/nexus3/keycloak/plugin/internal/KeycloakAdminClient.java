@@ -57,22 +57,25 @@ public class KeycloakAdminClient {
         }
     }
 
-    public AccessTokenResponse obtainAccessToken(String username, String password) {
+    public AccessTokenResponse obtainAccessToken(String username, String password, String token) {
         URI uri = KeycloakUriBuilder.fromUri(this.config.getAuthServerUrl())
-                                    .path(ServiceUrlConstants.TOKEN_PATH)
-                                    .build(this.config.getRealm());
+                .path(ServiceUrlConstants.TOKEN_PATH)
+                .build(this.config.getRealm());
         HttpMethod<AccessTokenResponse> httpMethod = getHttp().post(uri);
 
         httpMethod = httpMethod.form()
-                               .param(OAuth2Constants.GRANT_TYPE, OAuth2Constants.PASSWORD)
-                               .param("username", username)
-                               .param("password", password);
+                .param(OAuth2Constants.GRANT_TYPE, OAuth2Constants.PASSWORD)
+                .param("username", username)
+                .param("password", password);
+        if (token != null) {
+            httpMethod.param("totp", token);
+        }
 
         if (this.config.isPublicClient()) {
             httpMethod.param(OAuth2Constants.CLIENT_ID, this.config.getResource());
         } else {
             httpMethod.authorizationBasic(this.config.getResource(),
-                                          this.config.getCredentials().get("secret").toString());
+                    this.config.getCredentials().get("secret").toString());
         }
 
         return httpMethod.response().json(AccessTokenResponse.class).execute();
@@ -80,13 +83,14 @@ public class KeycloakAdminClient {
 
     public ClientRepresentation getRealmClient(String clientId) {
         HttpMethod<List<ClientRepresentation>> httpMethod = getHttp().get("/admin/realms/%s/clients",
-                                                                          this.config.getRealm());
+                this.config.getRealm());
 
         List<ClientRepresentation> clients = httpMethod.param("clientId", clientId)
-                                                       .authentication()
-                                                       .response()
-                                                       .json(new TypeReference<List<ClientRepresentation>>() {})
-                                                       .execute();
+                .authentication()
+                .response()
+                .json(new TypeReference<List<ClientRepresentation>>() {
+                })
+                .execute();
 
         return clients != null && !clients.isEmpty() ? clients.get(0) : null;
     }
@@ -97,7 +101,7 @@ public class KeycloakAdminClient {
         }
 
         HttpMethod<List<UserRepresentation>> httpMethod = getHttp().get("/admin/realms/%s/users",
-                                                                        this.config.getRealm());
+                this.config.getRealm());
 
         // https://github.com/keycloak/keycloak/blob/master/services/src/main/java/org/keycloak/services/resources/admin/UsersResource.java#L177
         boolean isEmail = EMAIL_PATTERN.matcher(userNameOrEmail).matches();
@@ -107,16 +111,17 @@ public class KeycloakAdminClient {
             httpMethod.param("username", userNameOrEmail);
         }
         List<UserRepresentation> users = httpMethod.authentication()
-                                                   .response()
-                                                   .json(new TypeReference<List<UserRepresentation>>() {})
-                                                   .execute();
+                .response()
+                .json(new TypeReference<List<UserRepresentation>>() {
+                })
+                .execute();
 
         if (users != null) {
             for (UserRepresentation user : users) {
                 // Note: We need to avoid someone try to register email as username to fake others.
                 boolean matched = isEmail
-                                  ? userNameOrEmail.equals(user.getEmail())
-                                  : userNameOrEmail.equals(user.getUsername());
+                        ? userNameOrEmail.equals(user.getEmail())
+                        : userNameOrEmail.equals(user.getUsername());
                 if (matched) {
                     return user;
                 }
@@ -127,37 +132,39 @@ public class KeycloakAdminClient {
 
     public List<UserRepresentation> getUsers() {
         HttpMethod<List<UserRepresentation>> httpMethod = getHttp().get("/admin/realms/%s/users",
-                                                                        this.config.getRealm());
+                this.config.getRealm());
 
-        return httpMethod.authentication().response().json(new TypeReference<List<UserRepresentation>>() {}).execute();
+        return httpMethod.authentication().response().json(new TypeReference<List<UserRepresentation>>() {
+        }).execute();
     }
 
     public List<UserRepresentation> findUsers(String searchText) {
         HttpMethod<List<UserRepresentation>> httpMethod = getHttp().get("/admin/realms/%s/users",
-                                                                        this.config.getRealm());
+                this.config.getRealm());
 
         // https://github.com/keycloak/keycloak/blob/master/services/src/main/java/org/keycloak/services/resources/admin/UsersResource.java#L177
         return httpMethod.param("search", searchText)
-                         .authentication()
-                         .response()
-                         .json(new TypeReference<List<UserRepresentation>>() {})
-                         .execute();
+                .authentication()
+                .response()
+                .json(new TypeReference<List<UserRepresentation>>() {
+                })
+                .execute();
     }
 
     public RoleRepresentation getRealmClientRoleByRoleName(String clientId, String roleName) {
         ClientRepresentation client = getRealmClient(clientId);
         HttpMethod<RoleRepresentation> httpMethod = getHttp().get("/admin/realms/%s/clients/%s/roles/%s",
-                                                                  this.config.getRealm(),
-                                                                  client.getId(),
-                                                                  roleName);
+                this.config.getRealm(),
+                client.getId(),
+                roleName);
 
         return httpMethod.authentication().response().json(RoleRepresentation.class).execute();
     }
 
     public RoleRepresentation getRealmRoleByRoleName(String roleName) {
         HttpMethod<RoleRepresentation> httpMethod = getHttp().get("/admin/realms/%s/roles/%s",
-                                                                  this.config.getRealm(),
-                                                                  roleName);
+                this.config.getRealm(),
+                roleName);
 
         return httpMethod.authentication().response().json(RoleRepresentation.class).execute();
     }
@@ -180,27 +187,30 @@ public class KeycloakAdminClient {
     public List<RoleRepresentation> getRealmClientRoles(String clientId) {
         ClientRepresentation client = getRealmClient(clientId);
         HttpMethod<List<RoleRepresentation>> httpMethod = getHttp().get("/admin/realms/%s/clients/%s/roles",
-                                                                        this.config.getRealm(),
-                                                                        client.getId());
+                this.config.getRealm(),
+                client.getId());
 
-        return httpMethod.authentication().response().json(new TypeReference<List<RoleRepresentation>>() {}).execute();
+        return httpMethod.authentication().response().json(new TypeReference<List<RoleRepresentation>>() {
+        }).execute();
     }
 
     public List<RoleRepresentation> getRealmRoles() {
         HttpMethod<List<RoleRepresentation>> httpMethod = getHttp().get("/admin/realms/%s/roles",
-                                                                        this.config.getRealm());
+                this.config.getRealm());
 
-        return httpMethod.authentication().response().json(new TypeReference<List<RoleRepresentation>>() {}).execute();
+        return httpMethod.authentication().response().json(new TypeReference<List<RoleRepresentation>>() {
+        }).execute();
     }
 
     public List<GroupRepresentation> getRealmGroups() {
         HttpMethod<List<GroupRepresentation>> httpMethod = getHttp().get("/admin/realms/%s/groups",
-                                                                         this.config.getRealm());
+                this.config.getRealm());
 
         List<GroupRepresentation> groups = httpMethod.authentication()
-                                                     .response()
-                                                     .json(new TypeReference<List<GroupRepresentation>>() {})
-                                                     .execute();
+                .response()
+                .json(new TypeReference<List<GroupRepresentation>>() {
+                })
+                .execute();
         return getAllGroupsRecursively(groups);
     }
 
@@ -223,7 +233,8 @@ public class KeycloakAdminClient {
                 user.getId(),
                 client.getId());
 
-        return httpMethod.authentication().response().json(new TypeReference<List<RoleRepresentation>>() {}).execute();
+        return httpMethod.authentication().response().json(new TypeReference<List<RoleRepresentation>>() {
+        }).execute();
     }
 
     public List<RoleRepresentation> getRealmRolesOfUser(String username) {
@@ -243,7 +254,8 @@ public class KeycloakAdminClient {
                 this.config.getRealm(),
                 user.getId());
 
-        return httpMethod.authentication().response().json(new TypeReference<List<RoleRepresentation>>() {}).execute();
+        return httpMethod.authentication().response().json(new TypeReference<List<RoleRepresentation>>() {
+        }).execute();
     }
 
     public List<GroupRepresentation> getRealmGroupsOfUser(UserRepresentation user) {
@@ -252,10 +264,11 @@ public class KeycloakAdminClient {
         }
 
         HttpMethod<List<GroupRepresentation>> httpMethod = getHttp().get("/admin/realms/%s/users/%s/groups",
-                                                                         this.config.getRealm(),
-                                                                         user.getId());
+                this.config.getRealm(),
+                user.getId());
 
-        return httpMethod.authentication().response().json(new TypeReference<List<GroupRepresentation>>() {}).execute();
+        return httpMethod.authentication().response().json(new TypeReference<List<GroupRepresentation>>() {
+        }).execute();
     }
 
     public List<RoleRepresentation> combineRoles(Collection<RoleRepresentation>... collections) {

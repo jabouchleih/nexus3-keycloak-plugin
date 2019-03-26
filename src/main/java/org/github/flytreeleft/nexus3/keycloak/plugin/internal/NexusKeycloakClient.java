@@ -13,6 +13,7 @@ import javax.inject.Singleton;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.util.StringUtils;
 import org.github.flytreeleft.nexus3.keycloak.plugin.internal.mapper.KeycloakMapper;
+import org.github.flytreeleft.nexus3.keycloak.plugin.internal.token.UsernamePasswordOnetimePasswordToken;
 import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.representations.idm.GroupRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
@@ -31,9 +32,12 @@ public class NexusKeycloakClient {
 
     private transient KeycloakAdminClient keycloakAdminClient;
 
-    public boolean authenticate(UsernamePasswordToken token) {
-        AccessTokenResponse accessTokenResponse = getKeycloakAdminClient().obtainAccessToken(token.getUsername(),
-                                                                                             new String(token.getPassword()));
+    public boolean authenticate(UsernamePasswordOnetimePasswordToken token) {
+        AccessTokenResponse accessTokenResponse = getKeycloakAdminClient().obtainAccessToken(
+                token.getUsername(),
+                new String(token.getPassword()),
+                token.getOneTimePassword()
+        );
 
         return accessTokenResponse != null && StringUtils.hasText(accessTokenResponse.getToken());
     }
@@ -69,8 +73,8 @@ public class NexusKeycloakClient {
             role = getKeycloakAdminClient().getRealmRoleByRoleName(roleName);
         } else {
             String roleName = roleId.startsWith(KeycloakMapper.CLIENT_ROLE_PREFIX)
-                              ? roleId.substring(KeycloakMapper.CLIENT_ROLE_PREFIX.length() + 1)
-                              : roleId;
+                    ? roleId.substring(KeycloakMapper.CLIENT_ROLE_PREFIX.length() + 1)
+                    : roleId;
             String client = getKeycloakAdminClient().getConfig().getResource();
             role = getKeycloakAdminClient().getRealmClientRoleByRoleName(client, roleName);
         }

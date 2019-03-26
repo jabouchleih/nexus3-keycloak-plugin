@@ -33,11 +33,11 @@ public class KeycloakAdminClientTest {
 
     @Test
     public void testObtainAccessToken() {
-        AccessTokenResponse accessToken = this.client.obtainAccessToken(DEFAULT_USER, DEFAULT_USER_PASSWORD);
+        AccessTokenResponse accessToken = this.client.obtainAccessToken(DEFAULT_USER, DEFAULT_USER_PASSWORD, null);
         Assert.assertNotNull(accessToken);
 
         try {
-            accessToken = this.client.obtainAccessToken("unknown", "unknown");
+            accessToken = this.client.obtainAccessToken("unknown", "unknown", null);
             Assert.assertNull(accessToken);
         } catch (HttpResponseException e) {
             Assert.assertEquals(e.getStatusCode(), 401);

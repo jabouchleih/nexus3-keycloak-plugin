@@ -24,6 +24,7 @@ import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.eclipse.sisu.Description;
 import org.github.flytreeleft.nexus3.keycloak.plugin.internal.NexusKeycloakClient;
+import org.github.flytreeleft.nexus3.keycloak.plugin.internal.token.UsernamePasswordOnetimePasswordToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,7 +74,7 @@ public class KeycloakAuthenticatingRealm extends AuthorizingRealm {
 
         UsernamePasswordToken t = (UsernamePasswordToken) token;
 
-        boolean authenticated = this.client.authenticate(t);
+        boolean authenticated = this.client.authenticate(new UsernamePasswordOnetimePasswordToken(t));
 //        LOGGER.info("doGetAuthenticationInfo for " + t.getUsername() + ": " + authenticated);
 
         if (authenticated) {
